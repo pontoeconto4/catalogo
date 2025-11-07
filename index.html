@@ -1,93 +1,103 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ponto e Conto 🎧 | Catálogo de Histórias</title>
+  <title>Ponto e Conto - Catálogo</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background: #111;
+      font-family: Arial, sans-serif;
+      background-color: #111;
       color: #fff;
       margin: 0;
       padding: 20px;
       text-align: center;
     }
-    h1 { color: #ff4444; margin-bottom: 10px; }
-    input {
-      width: 90%;
-      max-width: 400px;
+    h1 { margin-bottom: 20px; }
+    #searchInput {
       padding: 10px;
-      border-radius: 10px;
+      width: 300px;
+      border-radius: 5px;
       border: none;
+      outline: none;
       margin-bottom: 20px;
-      font-size: 16px;
+    }
+    #videos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
     }
     .video {
-      background: #222;
+      width: 320px;
+      background-color: #222;
       border-radius: 10px;
-      margin: 10px auto;
-      padding: 15px;
-      max-width: 500px;
-      text-align: left;
-      transition: 0.3s;
+      overflow: hidden;
+      transition: transform 0.2s;
     }
-    .video:hover { background: #333; }
-    .title { font-size: 16px; margin-bottom: 8px; }
-    a {
-      color: #ff4444;
-      text-decoration: none;
+    .video:hover {
+      transform: scale(1.03);
     }
     img {
       width: 100%;
-      border-radius: 10px;
+      display: block;
+    }
+    .title {
+      padding: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
     }
   </style>
 </head>
 <body>
-  <h1>Ponto e Conto 🎧</h1>
-  <p>Busque pelo título e encontre o vídeo completo:</p>
-  <input type="text" id="search" placeholder="Digite parte do título...">
-
+  <h1>🎬 Ponto e Conto - Catálogo</h1>
+  <input type="text" id="searchInput" placeholder="Buscar vídeo por título..." />
   <div id="videos"></div>
 
   <script>
-    const apiKey = "AIzaSyAoyPZIVOTTnVJfHJy5_b71nrgmya9YsLw"; // substitua por sua chave real
-    const channelId = "UC2_ZuiQHaK3KXyyD1sID4pw"; // teu canal
+    const apiKey = "AIzaSyAoyPZIVOTTnVJfHJy5_b71nrgmya9YsLw";
+    const playlistId = "PLpG8gN9ZW60u5stl-9Xj6pzjiL5Fhw2tx";
 
-    async function getVideos() {
-      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet,id&order=date&maxResults=50`);
-      const data = await res.json();
+    async function carregarVideos(pageToken = "") {
+      const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}&pageToken=${pageToken}`;
+      const resposta = await fetch(url);
+      const dados = await resposta.json();
+
       const container = document.getElementById("videos");
-      container.innerHTML = "";
 
-      data.items.forEach(video => {
-        if (video.id.kind === "youtube#video") {
-          const title = video.snippet.title;
-          const link = `https://www.youtube.com/watch?v=${video.id.videoId}`;
-          const thumb = video.snippet.thumbnails.medium.url;
-          const videoEl = document.createElement("div");
-          videoEl.className = "video";
-          videoEl.innerHTML = `
-            <img src="${thumb}" alt="${title}">
-            <div class="title">${title}</div>
-            <a href="${link}" target="_blank">🎬 Assistir no YouTube</a>
-          `;
-          container.appendChild(videoEl);
-        }
+      dados.items.forEach(item => {
+        const titulo = item.snippet.title;
+        const idVideo = item.snippet.resourceId.videoId;
+        const miniatura = item.snippet.thumbnails?.medium?.url || "";
+        
+        const videoEl = document.createElement("div");
+        videoEl.className = "video";
+        videoEl.innerHTML = `
+          <a href="https://www.youtube.com/watch?v=${idVideo}" target="_blank">
+            <img src="${miniatura}" alt="${titulo}">
+            <div class="title">${titulo}</div>
+          </a>
+        `;
+        container.appendChild(videoEl);
       });
+
+      if (dados.nextPageToken) {
+        await carregarVideos(dados.nextPageToken);
+      }
     }
 
-    document.getElementById("search").addEventListener("input", e => {
-      const term = e.target.value.toLowerCase();
+    // Filtro de busca
+    document.getElementById("searchInput").addEventListener("input", function() {
+      const termo = this.value.toLowerCase();
       const videos = document.querySelectorAll(".video");
       videos.forEach(v => {
-        const title = v.querySelector(".title").textContent.toLowerCase();
-        v.style.display = title.includes(term) ? "block" : "none";
+        const titulo = v.textContent.toLowerCase();
+        v.style.display = titulo.includes(termo) ? "block" : "none";
       });
     });
 
-    getVideos();
+    carregarVideos();
   </script>
 </body>
 </html>
