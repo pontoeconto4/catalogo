@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ponto e Conto 🎧 | Catálogo de Histórias</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { color: #ff4444; margin-bottom: 10px; }
+    input {
+      width: 90%;
+      max-width: 400px;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .video {
+      background: #222;
+      border-radius: 10px;
+      margin: 10px auto;
+      padding: 15px;
+      max-width: 500px;
+      text-align: left;
+      transition: 0.3s;
+    }
+    .video:hover { background: #333; }
+    .title { font-size: 16px; margin-bottom: 8px; }
+    a {
+      color: #ff4444;
+      text-decoration: none;
+    }
+    img {
+      width: 100%;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ponto e Conto 🎧</h1>
+  <p>Busque pelo título e encontre o vídeo completo:</p>
+  <input type="text" id="search" placeholder="Digite parte do título...">
+
+  <div id="videos"></div>
+
+  <script>
+    const apiKey = "AIzaSyAoyPZIVOTTnVJfHJy5_b71nrgmya9YsLw"; // substitua por sua chave real
+    const channelId = "UC2_ZuiQHaK3KXyyD1sID4pw"; // teu canal
+
+    async function getVideos() {
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet,id&order=date&maxResults=50`);
+      const data = await res.json();
+      const container = document.getElementById("videos");
+      container.innerHTML = "";
+
+      data.items.forEach(video => {
+        if (video.id.kind === "youtube#video") {
+          const title = video.snippet.title;
+          const link = `https://www.youtube.com/watch?v=${video.id.videoId}`;
+          const thumb = video.snippet.thumbnails.medium.url;
+          const videoEl = document.createElement("div");
+          videoEl.className = "video";
+          videoEl.innerHTML = `
+            <img src="${thumb}" alt="${title}">
+            <div class="title">${title}</div>
+            <a href="${link}" target="_blank">🎬 Assistir no YouTube</a>
+          `;
+          container.appendChild(videoEl);
+        }
+      });
+    }
+
+    document.getElementById("search").addEventListener("input", e => {
+      const term = e.target.value.toLowerCase();
+      const videos = document.querySelectorAll(".video");
+      videos.forEach(v => {
+        const title = v.querySelector(".title").textContent.toLowerCase();
+        v.style.display = title.includes(term) ? "block" : "none";
+      });
+    });
+
+    getVideos();
+  </script>
+</body>
+</html>
